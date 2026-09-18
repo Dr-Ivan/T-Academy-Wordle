@@ -1,18 +1,15 @@
 package academy.fiveletters.game;
 
 import academy.fiveletters.dictionary.WordDictionary;
+import academy.fiveletters.word.WordRules;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Random;
-import java.util.regex.Pattern;
 
 /** Создаёт игровые партии и обрабатывает попытки. */
 public final class GameService {
 
     private static final int MINIMUM_DICTIONARY_SIZE = 50;
-    private static final int WORD_LENGTH = 5;
-    private static final Pattern WORD_PATTERN = Pattern.compile("[а-я]{" + WORD_LENGTH + "}");
 
     private final LetterMatcher letterMatcher = new LetterMatcher();
 
@@ -48,13 +45,13 @@ public final class GameService {
             return new GuessResult.Rejected(GuessRejectionReason.GAME_FINISHED);
         }
 
-        String normalizedGuess = guess.strip().toLowerCase(Locale.ROOT);
+        String normalizedGuess = WordRules.normalize(guess);
 
-        if (normalizedGuess.length() != WORD_LENGTH) {
+        if (normalizedGuess.length() != WordRules.length()) {
             return new GuessResult.Rejected(GuessRejectionReason.INVALID_LENGTH);
         }
 
-        if (!WORD_PATTERN.matcher(normalizedGuess).matches()) {
+        if (!WordRules.isCanonical(normalizedGuess)) {
             return new GuessResult.Rejected(GuessRejectionReason.INVALID_CHARACTERS);
         }
 
