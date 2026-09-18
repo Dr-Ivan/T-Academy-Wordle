@@ -74,4 +74,8 @@ public final class GameSession {
 
         attemptsHistory.add(guess);
     }
+
+    boolean containsWord(String word) {
+        return dictionary.contains(word);
+    }
 }
