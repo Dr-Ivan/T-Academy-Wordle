@@ -4,7 +4,6 @@ import academy.fiveletters.dictionary.WordDictionary;
 import academy.fiveletters.game.GameService;
 import academy.fiveletters.game.GameSession;
 import academy.fiveletters.game.GuessResult;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
