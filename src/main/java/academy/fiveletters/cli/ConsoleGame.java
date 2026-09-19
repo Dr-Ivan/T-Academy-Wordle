@@ -47,15 +47,7 @@ public final class ConsoleGame {
             }
             output.flush();
         }
-        printOutcome(session);
+        output.println(formatter.formatOutcome(session.status(), session.attemptsUsed(), session.answer()));
         output.flush();
-    }
-
-    private void printOutcome(GameSession session) {
-        switch (session.status()) {
-            case WIN -> output.println("Победа! Слово угадано за %d попыток".formatted(session.attemptsUsed()));
-            case LOSE -> output.println("Неудача. Загаданное слово: " + session.answer());
-            case IN_PROGRESS -> throw new IllegalStateException("Партия ещё не завершена");
-        }
     }
 }

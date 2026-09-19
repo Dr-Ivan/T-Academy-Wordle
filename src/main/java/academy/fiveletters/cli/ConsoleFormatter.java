@@ -1,5 +1,6 @@
 package academy.fiveletters.cli;
 
+import academy.fiveletters.game.GameStatus;
 import academy.fiveletters.game.GuessRejectionReason;
 import academy.fiveletters.game.GuessResult;
 import academy.fiveletters.game.LetterStatus;
@@ -32,6 +33,17 @@ public final class ConsoleFormatter {
             case INVALID_CHARACTERS -> "Допустимы только русские буквы без ё.";
             case WORD_NOT_IN_DICTIONARY -> "Такого слова нет в словаре.";
             case GAME_FINISHED -> "Партия уже завершена.";
+        };
+    }
+
+    public String formatOutcome(GameStatus status, int attemptsUsed, String answer) {
+        Objects.requireNonNull(status, "Статус не должен быть null");
+        Objects.requireNonNull(answer, "Ответ не должен быть null");
+
+        return switch (status) {
+            case WIN -> "Победа! Слово угадано за %d попыток".formatted(attemptsUsed);
+            case LOSE -> "Неудача. Загаданное слово: " + answer;
+            case IN_PROGRESS -> "Партия не завершена.";
         };
     }
 }
