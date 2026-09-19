@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import academy.fiveletters.game.LetterMatcher;
 import academy.fiveletters.game.LetterStatus;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -57,7 +56,6 @@ class LetterMatchingTest {
     }
 
     @Test
-    @Disabled("MR2: реализуй тест и удали эту строку")
     @DisplayName("Ни одна буква не подошла: все позиции ❌")
     void noMatchingLetters() {
         var result = matcher.match("озеро", "банан");
