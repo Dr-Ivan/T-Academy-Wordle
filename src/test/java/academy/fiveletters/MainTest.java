@@ -23,11 +23,10 @@ class MainTest {
         assertThat(result.stdout())
                 .contains(
                         "Seed: 42",
-                        "Слов в словаре: " + dictionary.size(),
-                        "Ответ (демонстрация MR1): " + expectedSession.answer(),
-                        "Лимит попыток: 6",
-                        "Использовано попыток: 0",
-                        "Статус: IN_PROGRESS");
+                        "Угадайте слово из пяти букв за 6 попыток.",
+                        "Введите слово:",
+                        "Ввод завершён. Партия прервана.")
+                .doesNotContain(expectedSession.answer(), "Победа!", "Неудача.", "демонстрация MR1");
     }
 
     @Test
@@ -65,7 +64,7 @@ class MainTest {
 
         assertThat(result.exitCode()).isZero();
         assertThat(result.stderr()).isEmpty();
-        assertThat(result.stdout()).contains("Использование:", "--seed").doesNotContain("Статус:");
+        assertThat(result.stdout()).contains("Использование:", "--seed").doesNotContain("Seed: ", "Введите слово:");
     }
 
     @ParameterizedTest
@@ -105,5 +104,39 @@ class MainTest {
         assertThat(result.exitCode()).isZero();
         assertThat(result.stdout()).contains("Seed: " + seed);
         assertThat(result.stderr()).isEmpty();
+    }
+
+    @Test
+    void invalidInputDoesNotConsumeAttemptBeforeWin() {
+        var dictionary = new DictionaryLoader().loadResource("/dictionary.txt");
+        var session = new GameService().startGame(dictionary, 6, 42L);
+        String input = "дом12\n" + session.answer() + "\n";
+
+        var result = CliRunner.runWithInput(input, "--seed", "42");
+
+        assertThat(result.exitCode()).isZero();
+        assertThat(result.stderr()).isEmpty();
+        assertThat(result.stdout())
+                .contains(
+                        "Допустимы только русские буквы без ё.",
+                        "✅✅✅✅✅ " + session.answer(),
+                        "Осталось попыток: 5",
+                        "Победа! Слово угадано за 1 попыток")
+                .doesNotContain("Неудача.", "Партия прервана.");
+    }
+
+    @Test
+    void doesNotProcessInputAfterWin() {
+        var dictionary = new DictionaryLoader().loadResource("/dictionary.txt");
+        var session = new GameService().startGame(dictionary, 6, 42L);
+        String input = session.answer() + "\nдом12\n";
+
+        var result = CliRunner.runWithInput(input, "--seed", "42");
+
+        assertThat(result.exitCode()).isZero();
+        assertThat(result.stderr()).isEmpty();
+        assertThat(result.stdout())
+                .contains("Победа!")
+                .doesNotContain("Допустимы только русские буквы без ё.", "Партия прервана.");
     }
 }
