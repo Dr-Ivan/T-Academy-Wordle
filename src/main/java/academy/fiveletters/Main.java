@@ -1,8 +1,14 @@
 package academy.fiveletters;
 
+import academy.fiveletters.cli.ConsoleGame;
 import academy.fiveletters.dictionary.DictionaryLoader;
 import academy.fiveletters.game.GameService;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Random;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +28,7 @@ public final class Main {
                        five-letters --help
 
         Без --seed начальное значение выбирается автоматически.
-        MR1: создаётся сессия и выводятся её параметры, включая ответ.
+        Угадайте слово из пяти букв за шесть попыток.
         """;
 
     private Main() {}
@@ -50,22 +56,22 @@ public final class Main {
             return EXIT_USAGE_ERROR;
         }
 
-        try {
+        try (var input = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
             var dictionary = new DictionaryLoader().loadResource("/dictionary.txt");
-            var session = new GameService().startGame(dictionary, DEFAULT_MAX_ATTEMPTS, seed);
+            var service = new GameService();
+            var session = service.startGame(dictionary, DEFAULT_MAX_ATTEMPTS, seed);
+            var output = new PrintWriter(System.out, true, StandardCharsets.UTF_8);
 
-            System.out.println("«5 букв»: демонстрация MR1");
-            System.out.println("Seed: " + seed);
-            System.out.println("Слов в словаре: " + dictionary.size());
-            System.out.println("Ответ (демонстрация MR1): " + session.answer());
-            System.out.println("Лимит попыток: " + session.maxAttempts());
-            System.out.println("Использовано попыток: " + session.attemptsUsed());
-            System.out.println("Статус: " + session.status());
+            output.println("Игра 5 букв");
+            output.println("Seed: " + seed);
+            output.println("Угадайте слово из пяти букв за %d попыток.".formatted(session.maxAttempts()));
+
+            new ConsoleGame(service, input, output).play(session);
 
             return EXIT_SUCCESS;
-        } catch (IllegalArgumentException | UncheckedIOException e) {
-            System.err.println("Не удалось создать игру: " + e.getMessage());
-            LOG.debug("Подробности ошибки создания игры", e);
+        } catch (IOException | UncheckedIOException | IllegalArgumentException e) {
+            System.err.println("Не удалось выполнить игру: " + e.getMessage());
+            LOG.debug("Подробности ошибки выполнения игры", e);
             return EXIT_STARTUP_ERROR;
         }
     }
