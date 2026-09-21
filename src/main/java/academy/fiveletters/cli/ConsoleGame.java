@@ -12,7 +12,7 @@ import java.util.Objects;
 public final class ConsoleGame {
 
     private final GameService service;
-    private final ConsoleFormatter formatter;
+    private final ConsoleResultPrinter resultPrinter;
     private final BufferedReader input;
     private final PrintWriter output;
 
@@ -20,7 +20,7 @@ public final class ConsoleGame {
         this.service = Objects.requireNonNull(service, "Сервис не должен быть null");
         this.input = Objects.requireNonNull(input, "Ввод не должен быть null");
         this.output = Objects.requireNonNull(output, "Вывод не должен быть null");
-        this.formatter = new ConsoleFormatter();
+        this.resultPrinter = new ConsoleResultPrinter(this.output);
     }
 
     public void play(GameSession session) throws IOException {
@@ -37,17 +37,9 @@ public final class ConsoleGame {
                 return;
             }
             GuessResult result = service.applyGuess(session, guess);
-
-            switch (result) {
-                case GuessResult.Accepted accepted -> {
-                    output.println(formatter.formatGuess(accepted));
-                    output.println("Осталось попыток: " + accepted.attemptsRemaining());
-                }
-                case GuessResult.Rejected rejected -> output.println(formatter.formatRejection(rejected.reason()));
-            }
-            output.flush();
+            resultPrinter.printGuessResult(result);
         }
-        output.println(formatter.formatOutcome(session.status(), session.attemptsUsed(), session.answer()));
-        output.flush();
+
+        resultPrinter.printOutcome(session.status(), session.attemptsUsed(), session.answer());
     }
 }
