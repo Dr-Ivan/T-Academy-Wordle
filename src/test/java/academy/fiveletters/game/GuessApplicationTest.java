@@ -5,16 +5,19 @@ import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 
 import academy.fiveletters.dictionary.WordDictionary;
 import java.util.List;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+@DisplayName("Обработка попыток и изменение игровой сессии")
 class GuessApplicationTest {
 
     private final WordDictionary dictionary = new WordDictionary(List.of("озеро", "арбуз", "сорок"));
     private final GameService service = new GameService();
 
     @Test
+    @DisplayName("Принятая попытка возвращает статусы букв, записывается в историю и расходует попытку")
     void acceptedGuessReturnsFeedbackAndUpdatesSession() {
         var session = new GameSession(dictionary, "озеро", 6);
 
@@ -37,6 +40,8 @@ class GuessApplicationTest {
     }
 
     @Test
+    @DisplayName(
+            "Перед записью в историю слово приводится к нижнему регистру и очищается от пробельных символов по краям")
     void normalizesCaseAndOuterWhitespaceBeforeRecordingGuess() {
         var session = new GameSession(dictionary, "озеро", 6);
 
@@ -48,6 +53,7 @@ class GuessApplicationTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"apple", "озёро", "до ма"})
+    @DisplayName("Недопустимые символы отклоняются без изменения состояния сессии")
     void rejectsUnsupportedCharactersWithoutChangingSession(String guess) {
         var session = new GameSession(dictionary, "озеро", 6);
 
@@ -60,6 +66,7 @@ class GuessApplicationTest {
     }
 
     @Test
+    @DisplayName("Слово проверяется по словарю текущей сессии")
     void validatesAgainstCurrentSessionDictionary() {
         var restrictedDictionary = new WordDictionary(List.of("озеро"));
         var session = new GameSession(restrictedDictionary, "озеро", 6);
@@ -71,6 +78,7 @@ class GuessApplicationTest {
     }
 
     @Test
+    @DisplayName("Статус и остаток попыток в предыдущем результате не меняются после следующего хода")
     void acceptedResultRemainsUnchangedAfterNextGuess() {
         var session = new GameSession(dictionary, "озеро", 6);
         var first = service.applyGuess(session, "арбуз");
@@ -89,6 +97,7 @@ class GuessApplicationTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"озеро", "арбуз"})
+    @DisplayName("После победы или поражения ввод отклоняется без изменения состояния сессии")
     void rejectsGuessAfterWinOrLoss(String firstGuess) {
         var session = new GameSession(dictionary, "озеро", 1);
         assertThat(service.applyGuess(session, firstGuess)).isInstanceOf(GuessResult.Accepted.class);
@@ -103,6 +112,7 @@ class GuessApplicationTest {
     }
 
     @Test
+    @DisplayName("Ввод null вызывает NullPointerException без изменения истории и счётчика попыток")
     void nullGuessIsProgrammingErrorAndDoesNotChangeSession() {
         var session = new GameSession(dictionary, "озеро", 6);
 
@@ -113,6 +123,7 @@ class GuessApplicationTest {
     }
 
     @Test
+    @DisplayName("Правильный ответ на шестой попытке завершает партию победой")
     void correctSixthGuessWinsGame() {
         var session = new GameSession(dictionary, "озеро", 6);
 
@@ -141,6 +152,7 @@ class GuessApplicationTest {
     }
 
     @Test
+    @DisplayName("Некорректный ввод сохраняет последнюю попытку для победного ответа")
     void rejectedInputDoesNotConsumeLastAttempt() {
         var session = new GameSession(dictionary, "озеро", 6);
 

@@ -13,8 +13,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+@DisplayName("Воспроизведение игровых сценариев")
 class ReplayServiceTest {
 
     private final WordDictionary dictionary = new DictionaryLoader().loadResource("/dictionary.txt");
@@ -22,6 +24,7 @@ class ReplayServiceTest {
     private final ReplayService replayService = new ReplayService(gameService);
 
     @Test
+    @DisplayName("Воспроизведение даёт те же результаты и историю, что и последовательная обработка ввода")
     void replayMatchesSequentialApplicationOfGuesses() {
         var session = gameService.startGame(dictionary, 6, 42L);
         String wrongGuess = wrongGuessFor(session.answer());
@@ -44,6 +47,7 @@ class ReplayServiceTest {
     }
 
     @Test
+    @DisplayName("Некорректный ввод сохраняется в шагах воспроизведения без расходования попыток")
     void recordsRejectedInputWithoutConsumingAttempt() {
         var replay = replayService.replay(dictionary, 6, 42L, List.of("", "дом12"));
 
@@ -57,6 +61,7 @@ class ReplayServiceTest {
     }
 
     @Test
+    @DisplayName("Ввод после победы записывается как отклонённый")
     void recordsInputAfterWinAsRejected() {
         String answer = gameService.startGame(dictionary, 6, 42L).answer();
 
@@ -70,6 +75,7 @@ class ReplayServiceTest {
     }
 
     @Test
+    @DisplayName("Ввод после поражения записывается как отклонённый")
     void recordsInputAfterLossAsRejected() {
         String answer = gameService.startGame(dictionary, 6, 42L).answer();
         String wrongGuess = wrongGuessFor(answer);
@@ -87,6 +93,7 @@ class ReplayServiceTest {
     }
 
     @Test
+    @DisplayName("Пустой сценарий оставляет партию незавершённой с пустой историей и полным запасом попыток")
     void emptyScenarioLeavesFreshSessionInProgress() {
         var replay = replayService.replay(dictionary, 6, 42L, List.of());
 
@@ -98,6 +105,7 @@ class ReplayServiceTest {
     }
 
     @Test
+    @DisplayName("Повторное воспроизведение того же сценария начинает независимую партию и повторяет результат")
     void repeatedReplayCreatesIndependentGame() {
         String answer = gameService.startGame(dictionary, 6, 42L).answer();
         List<String> inputs = List.of(answer);
@@ -112,6 +120,8 @@ class ReplayServiceTest {
     }
 
     @Test
+    @DisplayName(
+            "Результат воспроизведения не зависит от изменения входного списка и запрещает изменение своих коллекций")
     void resultDoesNotExposeMutableCollections() {
         String answer = gameService.startGame(dictionary, 6, 42L).answer();
         var inputs = new ArrayList<>(List.of(answer));

@@ -9,10 +9,12 @@ import academy.fiveletters.support.CliRunner;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+@DisplayName("Воспроизведение партии через командную строку")
 class ReplayCliTest {
 
     private final WordDictionary dictionary = new DictionaryLoader().loadResource("/dictionary.txt");
@@ -20,6 +22,7 @@ class ReplayCliTest {
             new GameService().startGame(dictionary, 6, 42L).answer();
 
     @Test
+    @DisplayName("Replay сообщает об ошибочном вводе и победе без запроса интерактивного ввода")
     void replaysWinWithoutReadingStandardInput() {
         var result = CliRunner.run("replay", "--seed", "42", "--guesses", "дом12", answer);
 
@@ -38,6 +41,7 @@ class ReplayCliTest {
     }
 
     @Test
+    @DisplayName("Replay показывает ответ при поражении и сообщает об отклонении ввода после завершения партии")
     void replaysLossAndReportsTrailingInput() {
         String wrongGuess = dictionary.words().stream()
                 .filter(word -> !word.equals(answer))
@@ -58,6 +62,7 @@ class ReplayCliTest {
     }
 
     @Test
+    @DisplayName("Пустой сценарий replay сообщает о незавершённой партии и не раскрывает ответ")
     void emptyScenarioDoesNotRevealAnswer() {
         var result = CliRunner.run("replay", "--seed", "42", "--guesses");
 
@@ -67,6 +72,7 @@ class ReplayCliTest {
     }
 
     @Test
+    @DisplayName("Одинаковые seed и сценарий replay дают одинаковый вывод")
     void replayOutputIsDeterministic() {
         var first = CliRunner.run("replay", "--seed", "42", "--guesses", answer);
         var second = CliRunner.run("replay", "--seed", "42", "--guesses", answer);
@@ -77,6 +83,7 @@ class ReplayCliTest {
     }
 
     @Test
+    @DisplayName("Replay без параметра seed завершается с ошибкой аргументов и кодом 2")
     void missingSeedIsUsageError() {
         var result = CliRunner.run("replay", "--guesses", "арбуз");
 
@@ -86,6 +93,7 @@ class ReplayCliTest {
     }
 
     @Test
+    @DisplayName("Replay без параметра guesses завершается с ошибкой аргументов и кодом 2")
     void missingGuessesOptionIsUsageError() {
         var result = CliRunner.run("replay", "--seed", "42");
 
@@ -96,6 +104,7 @@ class ReplayCliTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"abc", "9223372036854775808"})
+    @DisplayName("Некорректный seed в режиме replay вызывает сообщение об ошибке и код завершения 2")
     void invalidSeedIsUsageError(String seed) {
         var result = CliRunner.run("replay", "--seed", seed, "--guesses", "арбуз");
 

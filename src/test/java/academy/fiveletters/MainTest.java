@@ -10,11 +10,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-@DisplayName("Командная строка и демонстрационный запуск MR1")
+@DisplayName("Командная строка и запуск игры")
 class MainTest {
 
     @Test
-    @DisplayName("Запуск с seed выводит параметры новой сессии и ожидаемый ответ")
+    @DisplayName("Запуск с seed скрывает ответ и корректно завершается при конце ввода")
     void startsSessionWithSpecifiedSeed() {
         var dictionary = new DictionaryLoader().loadResource("/dictionary.txt");
         var expectedSession = new GameService().startGame(dictionary, 6, 42L);
@@ -117,6 +117,7 @@ class MainTest {
     }
 
     @Test
+    @DisplayName("Некорректный консольный ввод не расходует попытку перед победным ответом")
     void invalidInputDoesNotConsumeAttemptBeforeWin() {
         var dictionary = new DictionaryLoader().loadResource("/dictionary.txt");
         var session = new GameService().startGame(dictionary, 6, 42L);
@@ -136,6 +137,7 @@ class MainTest {
     }
 
     @Test
+    @DisplayName("После победы приложение завершает игру без обработки оставшегося ввода")
     void doesNotProcessInputAfterWin() {
         var dictionary = new DictionaryLoader().loadResource("/dictionary.txt");
         var session = new GameService().startGame(dictionary, 6, 42L);

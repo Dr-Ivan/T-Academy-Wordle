@@ -8,14 +8,17 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+@DisplayName("Корректность и неизменяемость результата попытки")
 class GuessResultTest {
 
     @Test
+    @DisplayName("Статусы букв защищены от изменения исходного и возвращаемого списка")
     void acceptedResultProtectsLetterStatusesFromChanges() {
         var original = new ArrayList<>(Collections.nCopies(5, LetterStatus.ABSENT));
 
@@ -36,6 +39,7 @@ class GuessResultTest {
     }
 
     @Test
+    @DisplayName("Победа допускается при отсутствии оставшихся попыток")
     void acceptsWinOnLastAttempt() {
         var result = new GuessResult.Accepted("озеро", Collections.nCopies(5, LetterStatus.EXACT), GameStatus.WIN, 0);
 
@@ -44,6 +48,7 @@ class GuessResultTest {
     }
 
     @Test
+    @DisplayName("Поражение допускается при отсутствии оставшихся попыток и неверном ответе")
     void acceptsLossWithNoAttemptsRemaining() {
         var result = new GuessResult.Accepted("арбуз", Collections.nCopies(5, LetterStatus.ABSENT), GameStatus.LOSE, 0);
 
@@ -53,6 +58,7 @@ class GuessResultTest {
 
     @ParameterizedTest
     @ValueSource(ints = {0, 4, 6})
+    @DisplayName("Результат с количеством статусов букв, отличным от пяти, отклоняется")
     void rejectsWrongNumberOfLetterStatuses(int size) {
         List<LetterStatus> letters = Collections.nCopies(size, LetterStatus.ABSENT);
 
@@ -62,6 +68,7 @@ class GuessResultTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"", "дом", "ОЗЕРО", "дом12", "озёро"})
+    @DisplayName("Результат со словом вне формата пяти русских строчных букв без ё отклоняется")
     void rejectsNonCanonicalWord(String guess) {
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> new GuessResult.Accepted(
@@ -77,6 +84,7 @@ class GuessResultTest {
         "IN_PROGRESS, 0, ABSENT",
         "IN_PROGRESS, -1, ABSENT"
     })
+    @DisplayName("Несогласованные статус игры, остаток попыток и статусы букв отклоняются")
     void rejectsInconsistentOutcome(GameStatus status, int remaining, LetterStatus letterStatus) {
         assertThatIllegalArgumentException()
                 .isThrownBy(() ->
@@ -84,6 +92,7 @@ class GuessResultTest {
     }
 
     @Test
+    @DisplayName("Результат с null вместо статуса буквы отклоняется")
     void rejectsNullLetterStatus() {
         var letters = new ArrayList<>(Collections.nCopies(5, LetterStatus.ABSENT));
         letters.set(0, null);
@@ -93,6 +102,7 @@ class GuessResultTest {
     }
 
     @Test
+    @DisplayName("Отклонённую попытку нельзя создать без причины отказа")
     void rejectionRequiresReason() {
         assertThatNullPointerException().isThrownBy(() -> new GuessResult.Rejected(null));
     }

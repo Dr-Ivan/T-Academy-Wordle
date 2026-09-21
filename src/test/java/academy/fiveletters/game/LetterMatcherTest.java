@@ -4,15 +4,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+@DisplayName("Сопоставление букв загаданного и введённого слова")
 class LetterMatcherTest {
 
     private final LetterMatcher matcher = new LetterMatcher();
 
     @Test
+    @DisplayName("Точное совпадение имеет приоритет перед другими вхождениями той же буквы")
     void exactMatchesTakePriorityOverEarlierMisplacedLetters() {
         var result = matcher.match("арбуз", "ааааа");
 
@@ -36,6 +39,7 @@ class LetterMatcherTest {
     }
 
     @Test
+    @DisplayName("После точных совпадений оставшиеся вхождения букв распределяются слева направо")
     void distributesRemainingOccurrencesFromLeftToRight() {
         var result = matcher.match("сорок", "крооо");
 
@@ -49,6 +53,7 @@ class LetterMatcherTest {
     }
 
     @Test
+    @DisplayName("Одно вхождение буквы в ответе не засчитывается для нескольких позиций ввода")
     void misplacedLetterCannotBeUsedTwice() {
         var result = matcher.match("арбуз", "ббабб");
 
@@ -62,6 +67,7 @@ class LetterMatcherTest {
     }
 
     @Test
+    @DisplayName("Список статусов букв нельзя изменить")
     void returnsUnmodifiableResult() {
         var result = matcher.match("озеро", "арбуз");
 
@@ -69,6 +75,7 @@ class LetterMatcherTest {
     }
 
     @Test
+    @DisplayName("Последующее сопоставление не изменяет результат предыдущего")
     void callsDoNotShareMutableState() {
         var first = matcher.match("озеро", "озеро");
         var second = matcher.match("озеро", "банан");
@@ -91,12 +98,14 @@ class LetterMatcherTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"", "дом", "домики", "дом12", "ОЗЕРО", "озёро", "apple"})
+    @DisplayName("Загаданное слово вне формата пяти русских строчных букв без ё отклоняется")
     void rejectsInvalidAnswer(String answer) {
         assertThatIllegalArgumentException().isThrownBy(() -> matcher.match(answer, "арбуз"));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"", "дом", "домики", "дом12", "ОЗЕРО", "озёро", "до ма"})
+    @DisplayName("Введённое слово вне формата пяти русских строчных букв без ё отклоняется")
     void rejectsInvalidGuess(String guess) {
         assertThatIllegalArgumentException().isThrownBy(() -> matcher.match("озеро", guess));
     }
