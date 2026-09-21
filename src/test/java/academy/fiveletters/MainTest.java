@@ -5,13 +5,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import academy.fiveletters.dictionary.DictionaryLoader;
 import academy.fiveletters.game.GameService;
 import academy.fiveletters.support.CliRunner;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+@DisplayName("Командная строка и демонстрационный запуск MR1")
 class MainTest {
 
     @Test
+    @DisplayName("Запуск с seed выводит параметры новой сессии и ожидаемый ответ")
     void startsSessionWithSpecifiedSeed() {
         var dictionary = new DictionaryLoader().loadResource("/dictionary.txt");
         var expectedSession = new GameService().startGame(dictionary, 6, 42L);
@@ -30,6 +33,7 @@ class MainTest {
     }
 
     @Test
+    @DisplayName("Отдельные запуски с одинаковым seed дают одинаковый вывод")
     void sameSeedProducesSameOutputAcrossProcesses() {
         var first = CliRunner.run("--seed", "42");
         var second = CliRunner.run("--seed", "42");
@@ -40,6 +44,7 @@ class MainTest {
     }
 
     @Test
+    @DisplayName("Автоматически выбранный seed позволяет повторить вывод первоначального запуска")
     void automaticallyChosenSeedCanBeReused() {
         var first = CliRunner.run();
 
@@ -59,6 +64,7 @@ class MainTest {
     }
 
     @Test
+    @DisplayName("Параметр --help выводит справку без запуска сессии")
     void showsHelpWithoutStartingSession() {
         var result = CliRunner.run("--help");
 
@@ -69,6 +75,7 @@ class MainTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"abc", "1.5", "", "9223372036854775808"})
+    @DisplayName("Некорректный seed вызывает сообщение об ошибке и завершение с кодом 2")
     void rejectsInvalidSeed(String seed) {
         var result = CliRunner.run("--seed", seed);
 
@@ -79,6 +86,7 @@ class MainTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"--seed", "--unknown", "42"})
+    @DisplayName("Неполные или неизвестные аргументы вызывают справку и завершение с кодом 2")
     void rejectsIncompleteOrUnknownArguments(String argument) {
         var result = CliRunner.run(argument);
 
@@ -88,6 +96,7 @@ class MainTest {
     }
 
     @Test
+    @DisplayName("Лишние аргументы запуска отклоняются с кодом 2")
     void rejectsExtraArguments() {
         var result = CliRunner.run("--seed", "42", "extra");
 
@@ -98,6 +107,7 @@ class MainTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"-1", "-9223372036854775808", "9223372036854775807"})
+    @DisplayName("Отрицательный seed и границы long принимаются при запуске приложения")
     void acceptsNegativeAndBoundarySeeds(String seed) {
         var result = CliRunner.run("--seed", seed);
 
