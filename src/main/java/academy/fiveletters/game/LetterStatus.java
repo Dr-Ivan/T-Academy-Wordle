@@ -3,11 +3,21 @@ package academy.fiveletters.game;
 /** Результат сопоставления одной буквы попытки с ответом. */
 public enum LetterStatus {
     /** Буква совпала с ответом на той же позиции. */
-    EXACT,
+    EXACT("✅"),
 
     /** Буква совпала с ещё не использованной буквой на другой позиции. */
-    PRESENT,
+    PRESENT("🟡"),
 
     /** Для буквы не осталось совпадений в ответе. */
-    ABSENT
+    ABSENT("❌");
+
+    private final String symbol;
+
+    LetterStatus(String symbol) {
+        this.symbol = symbol;
+    }
+
+    public String symbol() {
+        return symbol;
+    }
 }
