@@ -29,7 +29,7 @@ class WordDictionaryTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"", "дом", "домики", "дом12", "дом!!", "до ма", "apple", "ОЗЕРО", "озёро", " озеро "})
+    @ValueSource(strings = {"", "дом", "домики", "дом12", "дом!!", "до ма", "apple", "озёро", " озеро "})
     void rejectsInvalidDictionaryEntry(String word) {
         assertThatIllegalArgumentException().isThrownBy(() -> new WordDictionary(List.of(word)));
     }
@@ -54,5 +54,26 @@ class WordDictionaryTest {
         assertThatThrownBy(() -> dictionary.words().add("арбуз")).isInstanceOf(UnsupportedOperationException.class);
 
         assertThat(dictionary.words()).containsExactly("озеро");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"озеро", "ОЗЕРО", "ОзЕрО"})
+    void normalizesDictionaryEntries(String word) {
+        var dictionary = new WordDictionary(List.of(word));
+        assertThat(dictionary.words()).containsExactly("озеро");
+    }
+
+    @Test
+    void removesDuplicatesAfterCaseNormalization() {
+        var dictionary = new WordDictionary(List.of("озеро", "ОЗЕРО", "ОзЕрО"));
+        assertThat(dictionary.size()).isEqualTo(1);
+        assertThat(dictionary.words()).containsExactly("озеро");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"озеро", "ОЗЕРО", "ОзЕрО"})
+    void findsWordsRegardlessOfCase(String word) {
+        var dictionary = new WordDictionary(List.of("озеро"));
+        assertThat(dictionary.contains(word)).isTrue();
     }
 }

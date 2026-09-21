@@ -2,6 +2,7 @@ package academy.fiveletters.dictionary;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
@@ -23,11 +24,12 @@ public final class WordDictionary {
 
         for (String word : source) {
             Objects.requireNonNull(word, "Слово не должно быть null");
-            if (!WORD_PATTERN.matcher(word).matches()) {
-                throw new IllegalArgumentException("Недопустимое слово словаря: '%s'. ".formatted(word)
-                        + "Ожидаются пять русских букв в нижнем регистре без ё.");
+            String normalizedWord = word.toLowerCase(Locale.ROOT);
+            if (!WORD_PATTERN.matcher(normalizedWord).matches()) {
+                throw new IllegalArgumentException(
+                        "Недопустимое слово словаря: '%s'. ".formatted(word) + "Ожидаются пять русских букв без ё.");
             }
-            uniqueWords.add(word);
+            uniqueWords.add(normalizedWord);
         }
 
         if (uniqueWords.isEmpty()) {
@@ -44,7 +46,7 @@ public final class WordDictionary {
 
     public boolean contains(String word) {
         Objects.requireNonNull(word, "Слово не должно быть null");
-        return membership.contains(word);
+        return membership.contains(word.toLowerCase(Locale.ROOT));
     }
 
     public List<String> words() {
