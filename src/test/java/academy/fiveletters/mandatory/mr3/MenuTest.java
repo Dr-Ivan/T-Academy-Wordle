@@ -32,7 +32,7 @@ class MenuTest {
         assertThat(result.stderr()).isEmpty();
         assertThat(result.stdout())
                 .contains(
-                        "Неизвестный пункт меню. Введите 1 или 0.",
+                        "Неизвестный пункт меню. Введите 1, 2 или 0.",
                         "Seed: 42",
                         "✅✅✅✅✅ " + answer,
                         "Победа!",
@@ -41,7 +41,7 @@ class MenuTest {
 
         assertThat(result.stdout()
                         .lines()
-                        .filter(line -> line.equals("Неизвестный пункт меню. Введите 1 или 0."))
+                        .filter(line -> line.equals("Неизвестный пункт меню. Введите 1, 2 или 0."))
                         .count())
                 .isEqualTo(3L);
     }
