@@ -9,23 +9,29 @@ public final class CommandLineParser {
 
     private static final int GUESSES_OPTION_INDEX = 3;
     private static final int FIRST_GUESS_INDEX = 4;
+    private static final int MENU_ARGUMENT_COUNT = 3;
 
     public LaunchOptions parse(String[] args) {
         Objects.requireNonNull(args, "Аргументы не должны быть null");
 
         if (args.length == 0) {
-            return new LaunchOptions.Play(new Random().nextLong());
+            return new LaunchOptions.Menu(new Random().nextLong());
         }
 
         if ("replay".equals(args[0])) {
             return parseReplay(args);
         }
 
+        if (args.length == MENU_ARGUMENT_COUNT && "menu".equals(args[0]) && "--seed".equals(args[1])) {
+            return new LaunchOptions.Menu(parseSeed(args[2]));
+        }
+
         if (args.length == 2 && "--seed".equals(args[0])) {
             return new LaunchOptions.Play(parseSeed(args[1]));
         }
 
-        throw new IllegalArgumentException("Ожидается --seed <целое число>, команда replay либо запуск без аргументов");
+        throw new IllegalArgumentException("Ожидается запуск без аргументов, --seed <целое число>, "
+                + "menu --seed <целое число> или команда replay");
     }
 
     private LaunchOptions.Replay parseReplay(String[] args) {

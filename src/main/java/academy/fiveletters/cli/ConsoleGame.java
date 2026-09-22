@@ -23,8 +23,11 @@ public final class ConsoleGame {
         this.resultPrinter = new ConsoleResultPrinter(this.output);
     }
 
-    public void play(GameSession session) throws IOException {
+    public void play(GameSession session, long seed) throws IOException {
         Objects.requireNonNull(session, "Сессия не должна быть null");
+        output.println("Игра 5 букв");
+        output.println("Seed: " + seed);
+        output.println("Угадайте слово из пяти букв за %d попыток.".formatted(session.maxAttempts()));
 
         while (session.status() == GameStatus.IN_PROGRESS) {
             output.println("Введите слово:");

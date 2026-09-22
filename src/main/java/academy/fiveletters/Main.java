@@ -2,6 +2,7 @@ package academy.fiveletters;
 
 import academy.fiveletters.cli.CommandLineParser;
 import academy.fiveletters.cli.ConsoleGame;
+import academy.fiveletters.cli.ConsoleMenu;
 import academy.fiveletters.cli.ConsoleReplay;
 import academy.fiveletters.cli.LaunchOptions;
 import academy.fiveletters.dictionary.DictionaryLoader;
@@ -30,14 +31,18 @@ public final class Main {
     private static final int EXIT_USAGE_ERROR = 2;
 
     private static final String USAGE = """
-            Использование: five-letters [--seed <целое число>]
-                           five-letters replay --seed <целое число> --guesses [слова...]
-                           five-letters --help
+        Использование: five-letters
+                       five-letters --seed <целое число>
+                       five-letters menu --seed <целое число>
+                       five-letters replay --seed <целое число> --guesses [слова...]
+                       five-letters --help
 
-            Без --seed в обычной игре seed выбирается автоматически.
-            В replay seed обязателен; после --guesses идут строки сценария.
-            Угадайте слово из пяти букв за шесть попыток.
-            """;
+        Без аргументов открывается меню с автоматически выбранным начальным seed.
+        --seed запускает одну партию без меню.
+        menu --seed задаёт воспроизводимую последовательность партий.
+        В replay seed обязателен; после --guesses идут строки сценария.
+        Угадайте слово из пяти букв за шесть попыток.
+        """;
 
     private Main() {}
 
@@ -76,6 +81,7 @@ public final class Main {
                             .replay(dictionary, DEFAULT_MAX_ATTEMPTS, replay.seed(), replay.guesses());
                     new ConsoleReplay(output).print(replay.seed(), result);
                 }
+                case LaunchOptions.Menu menu -> runMenu(dictionary, service, output, menu.seed());
             }
 
             return EXIT_SUCCESS;
@@ -88,14 +94,17 @@ public final class Main {
 
     private static void playGame(WordDictionary dictionary, GameService service, PrintWriter output, long seed)
             throws IOException {
+
         GameSession session = service.startGame(dictionary, DEFAULT_MAX_ATTEMPTS, seed);
-
-        output.println("Игра 5 букв");
-        output.println("Seed: " + seed);
-        output.println("Угадайте слово из пяти букв за %d попыток.".formatted(session.maxAttempts()));
-
         try (BufferedReader input = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
-            new ConsoleGame(service, input, output).play(session);
+            new ConsoleGame(service, input, output).play(session, seed);
+        }
+    }
+
+    private static void runMenu(WordDictionary dictionary, GameService service, PrintWriter output, long seed)
+            throws IOException {
+        try (BufferedReader input = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
+            new ConsoleMenu(service, dictionary, DEFAULT_MAX_ATTEMPTS, input, output).run(seed);
         }
     }
 }

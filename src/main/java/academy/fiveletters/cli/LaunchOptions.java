@@ -3,7 +3,9 @@ package academy.fiveletters.cli;
 import java.util.List;
 import java.util.Objects;
 
-public sealed interface LaunchOptions permits LaunchOptions.Play, LaunchOptions.Replay {
+public sealed interface LaunchOptions permits LaunchOptions.Menu, LaunchOptions.Play, LaunchOptions.Replay {
+
+    record Menu(long seed) implements LaunchOptions {}
 
     record Play(long seed) implements LaunchOptions {}
 
