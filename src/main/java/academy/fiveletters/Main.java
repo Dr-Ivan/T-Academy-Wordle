@@ -5,12 +5,14 @@ import academy.fiveletters.cli.ConsoleGame;
 import academy.fiveletters.cli.ConsoleMenu;
 import academy.fiveletters.cli.ConsoleReplay;
 import academy.fiveletters.cli.LaunchOptions;
-import academy.fiveletters.dictionary.DictionaryLoader;
+import academy.fiveletters.dictionary.DictionaryCatalog;
+import academy.fiveletters.dictionary.DictionaryCatalogLoader;
 import academy.fiveletters.dictionary.WordDictionary;
 import academy.fiveletters.game.GameService;
 import academy.fiveletters.game.GameSession;
 import academy.fiveletters.replay.ReplayResult;
 import academy.fiveletters.replay.ReplayService;
+import academy.fiveletters.settings.GameSettings;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -70,7 +72,8 @@ public final class Main {
         }
 
         try {
-            var dictionary = new DictionaryLoader().loadResource("/dictionary.txt");
+            var catalog = new DictionaryCatalogLoader().load();
+            var dictionary = catalog.select(GameSettings.DEFAULT);
             var service = new GameService();
             var output = new PrintWriter(System.out, true, StandardCharsets.UTF_8);
 
@@ -81,7 +84,7 @@ public final class Main {
                             .replay(dictionary, DEFAULT_MAX_ATTEMPTS, replay.seed(), replay.guesses());
                     new ConsoleReplay(output).print(replay.seed(), result);
                 }
-                case LaunchOptions.Menu menu -> runMenu(dictionary, service, output, menu.seed());
+                case LaunchOptions.Menu menu -> runMenu(catalog, service, output, menu.seed());
             }
 
             return EXIT_SUCCESS;
@@ -101,10 +104,10 @@ public final class Main {
         }
     }
 
-    private static void runMenu(WordDictionary dictionary, GameService service, PrintWriter output, long seed)
+    private static void runMenu(DictionaryCatalog catalog, GameService service, PrintWriter output, long seed)
             throws IOException {
         try (BufferedReader input = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
-            new ConsoleMenu(service, dictionary, DEFAULT_MAX_ATTEMPTS, input, output).run(seed);
+            new ConsoleMenu(service, catalog, DEFAULT_MAX_ATTEMPTS, input, output).run(seed);
         }
     }
 }
