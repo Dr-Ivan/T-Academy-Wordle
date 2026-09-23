@@ -1,9 +1,10 @@
 package academy.fiveletters.replay;
 
 import academy.fiveletters.dictionary.WordDictionary;
+import academy.fiveletters.game.GameActionResult;
+import academy.fiveletters.game.GameActionService;
 import academy.fiveletters.game.GameService;
 import academy.fiveletters.game.GameSession;
-import academy.fiveletters.game.GuessResult;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -11,9 +12,11 @@ import java.util.Objects;
 public final class ReplayService {
 
     private final GameService gameService;
+    private final GameActionService actionService;
 
     public ReplayService(GameService gameService) {
         this.gameService = Objects.requireNonNull(gameService, "Игровой сервис не должен быть null");
+        this.actionService = new GameActionService(this.gameService);
     }
 
     public ReplayResult replay(WordDictionary dictionary, int maxAttempts, long seed, List<String> guesses) {
@@ -24,7 +27,7 @@ public final class ReplayService {
         List<ReplayStep> steps = new ArrayList<>();
 
         for (String input : inputs) {
-            GuessResult result = gameService.applyGuess(session, input);
+            GameActionResult result = actionService.apply(session, input);
             steps.add(new ReplayStep(input, result));
         }
 

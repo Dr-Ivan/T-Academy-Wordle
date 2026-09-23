@@ -12,6 +12,7 @@ public final class ReplayResult {
     private final int maxAttempts;
     private final List<String> attemptsHistory;
     private final List<ReplayStep> steps;
+    private final boolean hintUsed;
 
     ReplayResult(GameSession session, List<ReplayStep> steps) {
         Objects.requireNonNull(session, "Сессия не должна быть null");
@@ -19,6 +20,7 @@ public final class ReplayResult {
 
         this.answer = session.answer();
         this.status = session.status();
+        this.hintUsed = session.hintUsed();
         this.maxAttempts = session.maxAttempts();
         this.attemptsHistory = List.copyOf(session.attemptsHistory());
         this.steps = List.copyOf(steps);
@@ -46,5 +48,9 @@ public final class ReplayResult {
 
     public List<ReplayStep> steps() {
         return steps;
+    }
+
+    public boolean hintUsed() {
+        return hintUsed;
     }
 }
