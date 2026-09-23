@@ -20,7 +20,8 @@ class HintCliTest {
     @DisplayName("Оба режима показывают одну подсказку, отклоняют повтор и сохраняют попытку")
     void hintWorksInBothModes(boolean replay) {
         var dictionary = new DictionaryLoader().loadResource("/dictionary.txt");
-        String answer = new GameService().startGame(dictionary, MAX_ATTEMPTS, SEED).answer();
+        String answer =
+                new GameService().startGame(dictionary, MAX_ATTEMPTS, SEED).answer();
 
         CliRunner.Result result;
         if (replay) {
@@ -33,7 +34,7 @@ class HintCliTest {
         assertThat(result.stderr()).isEmpty();
         assertThat(result.stdout())
                 .contains(
-                        ("Подсказка: на позиции 1 находится буква \"%s\".").formatted(answer.charAt(0)),
+                        "Подсказка: на позиции 1 находится буква \"%s\".".formatted(answer.charAt(0)),
                         "Подсказка уже использована.",
                         "✅✅✅✅✅ " + answer,
                         "Осталось попыток: 5",
