@@ -38,10 +38,10 @@ public final class ConsoleMenu {
         this.settingsMenu = new ConsoleSettingsMenu(this.input, this.output);
     }
 
-    public void run(long initialSeed) throws IOException {
+    public void run(long initialSeed, GameSettings initialSettings) throws IOException {
         Random seedGenerator = new Random(initialSeed);
         long nextSeed = initialSeed;
-        GameSettings settings = GameSettings.DEFAULT;
+        GameSettings settings = Objects.requireNonNull(initialSettings, "Начальные настройки не должны быть null");
 
         while (true) {
             printMenu(settings);
@@ -55,7 +55,7 @@ public final class ConsoleMenu {
                 case "1" -> {
                     WordDictionary dictionary = catalog.select(settings);
                     GameSession session = service.startGame(dictionary, maxAttempts, nextSeed);
-                    game.play(session, nextSeed);
+                    game.play(session, nextSeed, settings);
                     if (session.status() == GameStatus.IN_PROGRESS) {
                         return;
                     }

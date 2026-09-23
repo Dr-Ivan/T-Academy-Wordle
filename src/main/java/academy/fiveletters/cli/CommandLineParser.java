@@ -1,50 +1,101 @@
 package academy.fiveletters.cli;
 
+import academy.fiveletters.settings.Difficulty;
+import academy.fiveletters.settings.GameSettings;
+import academy.fiveletters.settings.WordCategory;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
+import java.util.Set;
 
 public final class CommandLineParser {
 
-    private static final int GUESSES_OPTION_INDEX = 3;
-    private static final int FIRST_GUESS_INDEX = 4;
-    private static final int MENU_ARGUMENT_COUNT = 3;
+    private static final Set<String> VALUE_OPTIONS = Set.of("--seed", "--difficulty", "--category");
 
     public LaunchOptions parse(String[] args) {
         Objects.requireNonNull(args, "Аргументы не должны быть null");
 
-        if (args.length == 0) {
-            return new LaunchOptions.Menu(new Random().nextLong());
+        boolean menu = args.length == 0 || "menu".equals(args[0]);
+        boolean replay = args.length > 0 && "replay".equals(args[0]);
+        int startIndex = args.length > 0 && (menu || replay) ? 1 : 0;
+
+        ParsedArguments parsed = parseArguments(args, startIndex, replay);
+
+        var settings = new GameSettings(
+                parseEnum(Difficulty.class, parsed.options().getOrDefault("--difficulty", "standard"), "сложность"),
+                parseEnum(WordCategory.class, parsed.options().getOrDefault("--category", "all"), "категория"));
+
+        String seedValue = parsed.options().get("--seed");
+        if (seedValue == null && !menu) {
+            throw new IllegalArgumentException("Для этого режима обязателен параметр --seed");
         }
 
-        if ("replay".equals(args[0])) {
-            return parseReplay(args);
+        long seed = seedValue == null ? new Random().nextLong() : parseSeed(seedValue);
+        if (replay) {
+            if (!parsed.guessesSpecified()) {
+                throw new IllegalArgumentException("Для replay обязателен параметр --guesses");
+            }
+
+            return new LaunchOptions.Replay(seed, settings, parsed.guesses());
         }
 
-        if (args.length == MENU_ARGUMENT_COUNT && "menu".equals(args[0]) && "--seed".equals(args[1])) {
-            return new LaunchOptions.Menu(parseSeed(args[2]));
+        if (menu) {
+            return new LaunchOptions.Menu(seed, settings);
         }
 
-        if (args.length == 2 && "--seed".equals(args[0])) {
-            return new LaunchOptions.Play(parseSeed(args[1]));
-        }
-
-        throw new IllegalArgumentException("Ожидается запуск без аргументов, --seed <целое число>, "
-                + "menu --seed <целое число> или команда replay");
+        return new LaunchOptions.Play(seed, settings);
     }
 
-    private LaunchOptions.Replay parseReplay(String[] args) {
-        if (args.length < FIRST_GUESS_INDEX
-                || !"--seed".equals(args[1])
-                || !"--guesses".equals(args[GUESSES_OPTION_INDEX])) {
-            throw new IllegalArgumentException("Ожидается replay --seed <целое число> --guesses [слова...]");
+    private ParsedArguments parseArguments(String[] args, int startIndex, boolean replay) {
+        Map<String, String> options = new HashMap<>();
+        int index = startIndex;
+
+        while (index < args.length) {
+            String option = Objects.requireNonNull(args[index++], "Аргумент не должен быть null");
+
+            if ("--guesses".equals(option)) {
+                if (!replay) {
+                    throw new IllegalArgumentException("--guesses допустим только в режиме replay");
+                }
+
+                List<String> guesses = List.copyOf(Arrays.asList(Arrays.copyOfRange(args, index, args.length)));
+
+                return new ParsedArguments(Map.copyOf(options), guesses, true);
+            }
+
+            if (!VALUE_OPTIONS.contains(option)) {
+                throw new IllegalArgumentException("Неизвестный параметр: " + option);
+            }
+
+            if (options.containsKey(option)) {
+                throw new IllegalArgumentException("Параметр указан повторно: " + option);
+            }
+
+            if (index >= args.length) {
+                throw new IllegalArgumentException("Не задано значение параметра: " + option);
+            }
+
+            String value = Objects.requireNonNull(args[index++], "Значение параметра не должно быть null");
+
+            if (value.startsWith("--")) {
+                throw new IllegalArgumentException("Не задано значение параметра: " + option);
+            }
+            options.put(option, value);
         }
 
-        long seed = parseSeed(args[2]);
-        List<String> guesses = Arrays.asList(Arrays.copyOfRange(args, FIRST_GUESS_INDEX, args.length));
+        return new ParsedArguments(Map.copyOf(options), List.of(), false);
+    }
 
-        return new LaunchOptions.Replay(seed, guesses);
+    private <E extends Enum<E>> E parseEnum(Class<E> type, String value, String description) {
+        try {
+            return Enum.valueOf(type, value.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Неизвестная %s: '%s'".formatted(description, value), e);
+        }
     }
 
     private long parseSeed(String value) {
@@ -55,4 +106,6 @@ public final class CommandLineParser {
                     "Seed должен быть целым числом от %d до %d".formatted(Long.MIN_VALUE, Long.MAX_VALUE), e);
         }
     }
+
+    private record ParsedArguments(Map<String, String> options, List<String> guesses, boolean guessesSpecified) {}
 }

@@ -34,16 +34,20 @@ public final class Main {
 
     private static final String USAGE = """
         Использование: five-letters
-                       five-letters --seed <целое число>
-                       five-letters menu --seed <целое число>
-                       five-letters replay --seed <целое число> --guesses [слова...]
+                       five-letters --seed <число> [настройки]
+                       five-letters menu [--seed <число>] [настройки]
+                       five-letters replay --seed <число> [настройки] --guesses [ввод...]
                        five-letters --help
 
-        Без аргументов открывается меню с автоматически выбранным начальным seed.
-        --seed запускает одну партию без меню.
-        menu --seed задаёт воспроизводимую последовательность партий.
-        В replay seed обязателен; после --guesses идут строки сценария.
-        Угадайте слово из пяти букв за шесть попыток.
+        Настройки:
+          --difficulty standard|easy
+          --category all|nature|everyday
+
+        По умолчанию: standard, all.
+        Без аргументов открывается меню.
+        Для одной партии и replay seed обязателен.
+        Параметры до --guesses можно передавать в любом порядке.
+        После --guesses каждый аргумент считается вводом игрока, включая :hint.
         """;
 
     private Main() {}
@@ -73,18 +77,25 @@ public final class Main {
 
         try {
             var catalog = new DictionaryCatalogLoader().load();
-            var dictionary = catalog.select(GameSettings.DEFAULT);
             var service = new GameService();
             var output = new PrintWriter(System.out, true, StandardCharsets.UTF_8);
 
             switch (options) {
-                case LaunchOptions.Play play -> playGame(dictionary, service, output, play.seed());
+                case LaunchOptions.Play play ->
+                    playGame(catalog.select(play.settings()), service, output, play.seed(), play.settings());
+
                 case LaunchOptions.Replay replay -> {
                     ReplayResult result = new ReplayService(service)
-                            .replay(dictionary, DEFAULT_MAX_ATTEMPTS, replay.seed(), replay.guesses());
-                    new ConsoleReplay(output).print(replay.seed(), result);
+                            .replay(
+                                    catalog.select(replay.settings()),
+                                    DEFAULT_MAX_ATTEMPTS,
+                                    replay.seed(),
+                                    replay.guesses());
+
+                    new ConsoleReplay(output).print(replay.seed(), replay.settings(), result);
                 }
-                case LaunchOptions.Menu menu -> runMenu(catalog, service, output, menu.seed());
+
+                case LaunchOptions.Menu menu -> runMenu(catalog, service, output, menu.seed(), menu.settings());
             }
 
             return EXIT_SUCCESS;
@@ -95,19 +106,20 @@ public final class Main {
         }
     }
 
-    private static void playGame(WordDictionary dictionary, GameService service, PrintWriter output, long seed)
+    private static void playGame(
+            WordDictionary dictionary, GameService service, PrintWriter output, long seed, GameSettings settings)
             throws IOException {
-
         GameSession session = service.startGame(dictionary, DEFAULT_MAX_ATTEMPTS, seed);
         try (BufferedReader input = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
-            new ConsoleGame(service, input, output).play(session, seed);
+            new ConsoleGame(service, input, output).play(session, seed, settings);
         }
     }
 
-    private static void runMenu(DictionaryCatalog catalog, GameService service, PrintWriter output, long seed)
+    private static void runMenu(
+            DictionaryCatalog catalog, GameService service, PrintWriter output, long seed, GameSettings settings)
             throws IOException {
         try (BufferedReader input = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
-            new ConsoleMenu(service, catalog, DEFAULT_MAX_ATTEMPTS, input, output).run(seed);
+            new ConsoleMenu(service, catalog, DEFAULT_MAX_ATTEMPTS, input, output).run(seed, settings);
         }
     }
 }

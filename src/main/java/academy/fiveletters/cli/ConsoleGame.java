@@ -5,6 +5,7 @@ import academy.fiveletters.game.GameActionService;
 import academy.fiveletters.game.GameService;
 import academy.fiveletters.game.GameSession;
 import academy.fiveletters.game.GameStatus;
+import academy.fiveletters.settings.GameSettings;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -25,10 +26,12 @@ public final class ConsoleGame {
         this.actionService = new GameActionService(service);
     }
 
-    public void play(GameSession session, long seed) throws IOException {
+    public void play(GameSession session, long seed, GameSettings settings) throws IOException {
         Objects.requireNonNull(session, "Сессия не должна быть null");
+        Objects.requireNonNull(settings, "Настройки не должны быть null");
         output.println("Игра 5 букв");
         output.println("Seed: " + seed);
+        resultPrinter.printSettings(settings);
         output.println("Угадайте слово из пяти букв за %d попыток.".formatted(session.maxAttempts()));
         output.println("Для подсказки введите :hint. Доступна одна подсказка за партию.");
 
