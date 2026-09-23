@@ -150,6 +150,45 @@ class SettingsCliTest {
                 .isEqualTo(1L);
     }
 
+    @Test
+    @DisplayName("Одна партия и replay используют одинаковый выбранный словарь и правила подсказки")
+    void directGameAndReplayUseSelectedDictionary() {
+        var settings = new GameSettings(Difficulty.EASY, WordCategory.NATURE);
+        String answer = answerFor(settings, INITIAL_SEED);
+        String seed = Long.toString(INITIAL_SEED);
+
+        var direct = CliRunner.runWithInput(
+                ":hint\nдиван\n" + answer + "\n", "--seed", seed, "--difficulty", "easy", "--category", "nature");
+
+        var replay = CliRunner.run(
+                "replay",
+                "--category",
+                "nature",
+                "--difficulty",
+                "easy",
+                "--seed",
+                seed,
+                "--guesses",
+                ":hint",
+                "диван",
+                answer);
+
+        for (var result : java.util.List.of(direct, replay)) {
+            assertThat(result.exitCode()).isZero();
+            assertThat(result.stderr()).isEmpty();
+            assertThat(result.stdout())
+                    .contains(
+                            "Сложность: Лёгкая",
+                            "Категория: Природа",
+                            "Подсказка: на позиции 1 находится буква \"%s\".".formatted(answer.charAt(0)),
+                            "Такого слова нет в словаре.",
+                            "✅✅✅✅✅ " + answer,
+                            "Осталось попыток: 5",
+                            "Победа!")
+                    .doesNotContain("Партия прервана.", "Неудача.");
+        }
+    }
+
     private String answerFor(GameSettings settings, long seed) {
         return service.startGame(catalog.select(settings), MAX_ATTEMPTS, seed).answer();
     }
