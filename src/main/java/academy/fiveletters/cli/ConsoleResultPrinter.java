@@ -1,7 +1,9 @@
 package academy.fiveletters.cli;
 
+import academy.fiveletters.game.GameActionResult;
 import academy.fiveletters.game.GameStatus;
 import academy.fiveletters.game.GuessResult;
+import academy.fiveletters.game.HintResult;
 import java.io.PrintWriter;
 import java.util.Objects;
 
@@ -30,5 +32,17 @@ final class ConsoleResultPrinter {
     void printOutcome(GameStatus status, int attemptsUsed, String answer) {
         output.println(formatter.formatOutcome(status, attemptsUsed, answer));
         output.flush();
+    }
+
+    void printActionResult(GameActionResult result) {
+        Objects.requireNonNull(result, "Результат действия не должен быть null");
+
+        switch (result) {
+            case GuessResult guess -> printGuessResult(guess);
+            case HintResult hint -> {
+                output.println(formatter.formatHint(hint));
+                output.flush();
+            }
+        }
     }
 }

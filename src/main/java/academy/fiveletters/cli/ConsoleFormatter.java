@@ -3,6 +3,7 @@ package academy.fiveletters.cli;
 import academy.fiveletters.game.GameStatus;
 import academy.fiveletters.game.GuessRejectionReason;
 import academy.fiveletters.game.GuessResult;
+import academy.fiveletters.game.HintResult;
 import java.util.Objects;
 
 public final class ConsoleFormatter {
@@ -24,5 +25,15 @@ public final class ConsoleFormatter {
         Objects.requireNonNull(status, "Статус не должен быть null");
         Objects.requireNonNull(answer, "Ответ не должен быть null");
         return status.messageTemplate().formatted(attemptsUsed, answer);
+    }
+
+    public String formatHint(HintResult result) {
+        Objects.requireNonNull(result, "Результат подсказки не должен быть null");
+
+        return switch (result) {
+            case HintResult.Revealed revealed ->
+                "Подсказка: на позиции %d находится буква \"%s\".".formatted(revealed.position(), revealed.letter());
+            case HintResult.Rejected rejected -> rejected.reason().message();
+        };
     }
 }

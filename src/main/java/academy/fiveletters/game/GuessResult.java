@@ -4,7 +4,7 @@ import academy.fiveletters.word.WordRules;
 import java.util.List;
 import java.util.Objects;
 
-public sealed interface GuessResult permits GuessResult.Accepted, GuessResult.Rejected {
+public sealed interface GuessResult extends GameActionResult permits GuessResult.Accepted, GuessResult.Rejected {
 
     record Accepted(String guess, List<LetterStatus> letters, GameStatus status, int attemptsRemaining)
             implements GuessResult {

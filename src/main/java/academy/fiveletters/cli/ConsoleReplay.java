@@ -24,7 +24,7 @@ public final class ConsoleReplay {
         int stepNumber = 1;
         for (ReplayStep step : replay.steps()) {
             output.println("Шаг %d: \"%s\"".formatted(stepNumber, step.input()));
-            resultPrinter.printGuessResult(step.result());
+            resultPrinter.printActionResult(step.result());
             stepNumber++;
         }
 
