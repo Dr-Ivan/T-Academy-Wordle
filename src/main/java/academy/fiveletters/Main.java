@@ -4,6 +4,7 @@ import academy.fiveletters.cli.CommandLineParser;
 import academy.fiveletters.cli.ConsoleGame;
 import academy.fiveletters.cli.ConsoleMenu;
 import academy.fiveletters.cli.ConsoleReplay;
+import academy.fiveletters.cli.ConsoleStatisticsPrinter;
 import academy.fiveletters.cli.LaunchOptions;
 import academy.fiveletters.dictionary.DictionaryCatalog;
 import academy.fiveletters.dictionary.DictionaryCatalogLoader;
@@ -13,6 +14,7 @@ import academy.fiveletters.game.GameSession;
 import academy.fiveletters.replay.ReplayResult;
 import academy.fiveletters.replay.ReplayService;
 import academy.fiveletters.settings.GameSettings;
+import academy.fiveletters.statistics.PlayerStatistics;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -110,8 +112,16 @@ public final class Main {
             WordDictionary dictionary, GameService service, PrintWriter output, long seed, GameSettings settings)
             throws IOException {
         GameSession session = service.startGame(dictionary, DEFAULT_MAX_ATTEMPTS, seed);
+        var statistics = new PlayerStatistics();
+
         try (BufferedReader input = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
-            new ConsoleGame(service, input, output).play(session, seed, settings);
+            statistics.startGame(session);
+            try {
+                new ConsoleGame(service, input, output).play(session, seed, settings);
+            } finally {
+                statistics.finishGame();
+                new ConsoleStatisticsPrinter(output).print(statistics.snapshot());
+            }
         }
     }
 
