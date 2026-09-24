@@ -19,18 +19,6 @@ final class ConsoleResultPrinter {
         this.formatter = new ConsoleFormatter(colorMode);
     }
 
-    void printGuessResult(GuessResult result) {
-        Objects.requireNonNull(result, "Результат не должен быть null");
-        switch (result) {
-            case GuessResult.Accepted accepted -> {
-                output.println(formatter.formatGuess(accepted));
-                output.println("Осталось попыток: " + accepted.attemptsRemaining());
-            }
-            case GuessResult.Rejected rejected -> output.println(formatter.formatRejection(rejected.reason()));
-        }
-        output.flush();
-    }
-
     void printOutcome(GameStatus status, int attemptsUsed, String answer) {
         output.println(formatter.formatOutcome(status, attemptsUsed, answer));
         output.flush();
@@ -53,6 +41,18 @@ final class ConsoleResultPrinter {
 
         output.println("Сложность: " + settings.difficulty().title());
         output.println("Категория: " + settings.category().title());
+        output.flush();
+    }
+
+    private void printGuessResult(GuessResult result) {
+        Objects.requireNonNull(result, "Результат не должен быть null");
+        switch (result) {
+            case GuessResult.Accepted accepted -> {
+                output.println(formatter.formatGuess(accepted));
+                output.println("Осталось попыток: " + accepted.attemptsRemaining());
+            }
+            case GuessResult.Rejected rejected -> output.println(formatter.formatRejection(rejected.reason()));
+        }
         output.flush();
     }
 }
