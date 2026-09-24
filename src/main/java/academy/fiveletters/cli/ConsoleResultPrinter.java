@@ -11,11 +11,12 @@ import java.util.Objects;
 /** Общий вывод результатов попыток и итогов партии. */
 final class ConsoleResultPrinter {
 
-    private final ConsoleFormatter formatter = new ConsoleFormatter();
+    private final ConsoleFormatter formatter;
     private final PrintWriter output;
 
-    ConsoleResultPrinter(PrintWriter output) {
+    ConsoleResultPrinter(PrintWriter output, ColorMode colorMode) {
         this.output = Objects.requireNonNull(output, "Вывод не должен быть null");
+        this.formatter = new ConsoleFormatter(colorMode);
     }
 
     void printGuessResult(GuessResult result) {

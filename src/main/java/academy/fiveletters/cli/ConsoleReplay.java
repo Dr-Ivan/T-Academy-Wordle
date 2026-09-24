@@ -11,9 +11,9 @@ public final class ConsoleReplay {
     private final ConsoleResultPrinter resultPrinter;
     private final PrintWriter output;
 
-    public ConsoleReplay(PrintWriter output) {
+    public ConsoleReplay(PrintWriter output, ColorMode colorMode) {
         this.output = Objects.requireNonNull(output, "Вывод не должен быть null");
-        this.resultPrinter = new ConsoleResultPrinter(this.output);
+        this.resultPrinter = new ConsoleResultPrinter(this.output, colorMode);
     }
 
     public void print(long seed, GameSettings settings, ReplayResult replay) {

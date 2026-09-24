@@ -1,5 +1,6 @@
 package academy.fiveletters;
 
+import academy.fiveletters.cli.ColorMode;
 import academy.fiveletters.cli.CommandLineParser;
 import academy.fiveletters.cli.ConsoleGame;
 import academy.fiveletters.cli.ConsoleMenu;
@@ -44,8 +45,9 @@ public final class Main {
         Настройки:
           --difficulty standard|easy
           --category all|nature|everyday
+          --color never|always
 
-        По умолчанию: standard, all.
+        По умолчанию: standard, all, цвет выключен.
         Без аргументов открывается меню.
         Для одной партии и replay seed обязателен.
         Параметры до --guesses можно передавать в любом порядке.
@@ -84,7 +86,13 @@ public final class Main {
 
             switch (options) {
                 case LaunchOptions.Play play ->
-                    playGame(catalog.select(play.settings()), service, output, play.seed(), play.settings());
+                    playGame(
+                            catalog.select(play.settings()),
+                            service,
+                            output,
+                            play.seed(),
+                            play.settings(),
+                            play.colorMode());
 
                 case LaunchOptions.Replay replay -> {
                     ReplayResult result = new ReplayService(service)
@@ -94,10 +102,11 @@ public final class Main {
                                     replay.seed(),
                                     replay.guesses());
 
-                    new ConsoleReplay(output).print(replay.seed(), replay.settings(), result);
+                    new ConsoleReplay(output, replay.colorMode()).print(replay.seed(), replay.settings(), result);
                 }
 
-                case LaunchOptions.Menu menu -> runMenu(catalog, service, output, menu.seed(), menu.settings());
+                case LaunchOptions.Menu menu ->
+                    runMenu(catalog, service, output, menu.seed(), menu.settings(), menu.colorMode());
             }
 
             return EXIT_SUCCESS;
@@ -109,7 +118,12 @@ public final class Main {
     }
 
     private static void playGame(
-            WordDictionary dictionary, GameService service, PrintWriter output, long seed, GameSettings settings)
+            WordDictionary dictionary,
+            GameService service,
+            PrintWriter output,
+            long seed,
+            GameSettings settings,
+            ColorMode colorMode)
             throws IOException {
         GameSession session = service.startGame(dictionary, DEFAULT_MAX_ATTEMPTS, seed);
         var statistics = new PlayerStatistics();
@@ -117,7 +131,7 @@ public final class Main {
         try (BufferedReader input = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
             statistics.startGame(session);
             try {
-                new ConsoleGame(service, input, output).play(session, seed, settings);
+                new ConsoleGame(service, input, output, colorMode).play(session, seed, settings);
             } finally {
                 statistics.finishGame();
                 new ConsoleStatisticsPrinter(output).print(statistics.snapshot());
@@ -126,10 +140,15 @@ public final class Main {
     }
 
     private static void runMenu(
-            DictionaryCatalog catalog, GameService service, PrintWriter output, long seed, GameSettings settings)
+            DictionaryCatalog catalog,
+            GameService service,
+            PrintWriter output,
+            long seed,
+            GameSettings settings,
+            ColorMode colorMode)
             throws IOException {
         try (BufferedReader input = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
-            new ConsoleMenu(service, catalog, DEFAULT_MAX_ATTEMPTS, input, output).run(seed, settings);
+            new ConsoleMenu(service, catalog, DEFAULT_MAX_ATTEMPTS, input, output).run(seed, settings, colorMode);
         }
     }
 }

@@ -18,11 +18,11 @@ public final class ConsoleGame {
     private final BufferedReader input;
     private final PrintWriter output;
 
-    public ConsoleGame(GameService service, BufferedReader input, PrintWriter output) {
+    public ConsoleGame(GameService service, BufferedReader input, PrintWriter output, ColorMode colorMode) {
         Objects.requireNonNull(service, "Сервис не должен быть null");
         this.input = Objects.requireNonNull(input, "Ввод не должен быть null");
         this.output = Objects.requireNonNull(output, "Вывод не должен быть null");
-        this.resultPrinter = new ConsoleResultPrinter(this.output);
+        this.resultPrinter = new ConsoleResultPrinter(this.output, colorMode);
         this.actionService = new GameActionService(service);
     }
 

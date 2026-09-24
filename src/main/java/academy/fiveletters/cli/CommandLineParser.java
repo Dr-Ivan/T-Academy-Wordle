@@ -14,7 +14,7 @@ import java.util.Set;
 
 public final class CommandLineParser {
 
-    private static final Set<String> VALUE_OPTIONS = Set.of("--seed", "--difficulty", "--category");
+    private static final Set<String> VALUE_OPTIONS = Set.of("--seed", "--difficulty", "--category", "--color");
 
     public LaunchOptions parse(String[] args) {
         Objects.requireNonNull(args, "Аргументы не должны быть null");
@@ -28,6 +28,8 @@ public final class CommandLineParser {
         var settings = new GameSettings(
                 parseEnum(Difficulty.class, parsed.options().getOrDefault("--difficulty", "standard"), "сложность"),
                 parseEnum(WordCategory.class, parsed.options().getOrDefault("--category", "all"), "категория"));
+        ColorMode colorMode =
+                parseEnum(ColorMode.class, parsed.options().getOrDefault("--color", "never"), "режим цвета");
 
         String seedValue = parsed.options().get("--seed");
         if (seedValue == null && !menu) {
@@ -40,14 +42,14 @@ public final class CommandLineParser {
                 throw new IllegalArgumentException("Для replay обязателен параметр --guesses");
             }
 
-            return new LaunchOptions.Replay(seed, settings, parsed.guesses());
+            return new LaunchOptions.Replay(seed, settings, colorMode, parsed.guesses());
         }
 
         if (menu) {
-            return new LaunchOptions.Menu(seed, settings);
+            return new LaunchOptions.Menu(seed, settings, colorMode);
         }
 
-        return new LaunchOptions.Play(seed, settings);
+        return new LaunchOptions.Play(seed, settings, colorMode);
     }
 
     private ParsedArguments parseArguments(String[] args, int startIndex, boolean replay) {
@@ -94,7 +96,7 @@ public final class CommandLineParser {
         try {
             return Enum.valueOf(type, value.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Неизвестная %s: '%s'".formatted(description, value), e);
+            throw new IllegalArgumentException("Недопустимое значение (%s): '%s'".formatted(description, value), e);
         }
     }
 

@@ -20,7 +20,6 @@ public final class ConsoleMenu {
     private final int maxAttempts;
     private final BufferedReader input;
     private final PrintWriter output;
-    private final ConsoleGame game;
     private final ConsoleSettingsMenu settingsMenu;
     private final ConsoleStatisticsPrinter statisticsPrinter;
 
@@ -36,29 +35,28 @@ public final class ConsoleMenu {
         this.maxAttempts = maxAttempts;
         this.input = Objects.requireNonNull(input, "Ввод не должен быть null");
         this.output = Objects.requireNonNull(output, "Вывод не должен быть null");
-        this.game = new ConsoleGame(this.service, this.input, this.output);
         this.settingsMenu = new ConsoleSettingsMenu(this.input, this.output);
         this.statisticsPrinter = new ConsoleStatisticsPrinter(this.output);
     }
 
-    public void run(long initialSeed, GameSettings initialSettings) throws IOException {
-        Objects.requireNonNull(initialSettings, "Начальные настройки не должны быть null");
+    public void run(long initialSeed, GameSettings initialSettings, ColorMode initialColorMode) throws IOException {
+        var preferences = new ConsolePreferences(initialSettings, initialColorMode);
         var statistics = new PlayerStatistics();
         try {
-            runLoop(initialSeed, initialSettings, statistics);
+            runLoop(initialSeed, preferences, statistics);
         } finally {
             statisticsPrinter.print(statistics.snapshot());
         }
     }
 
-    private void runLoop(long initialSeed, GameSettings initialSettings, PlayerStatistics statistics)
+    private void runLoop(long initialSeed, ConsolePreferences initialPreferences, PlayerStatistics statistics)
             throws IOException {
         Random seedGenerator = new Random(initialSeed);
         long nextSeed = initialSeed;
-        GameSettings settings = Objects.requireNonNull(initialSettings, "Начальные настройки не должны быть null");
+        ConsolePreferences preferences = initialPreferences;
 
         while (true) {
-            printMenu(settings);
+            printMenu(preferences);
             String choice = input.readLine();
             if (choice == null) {
                 printEndOfInput();
@@ -67,20 +65,18 @@ public final class ConsoleMenu {
 
             switch (choice.strip()) {
                 case "1" -> {
-                    if (!playGame(settings, nextSeed, statistics)) {
+                    if (!playGame(preferences, nextSeed, statistics)) {
                         return;
                     }
                     nextSeed = seedGenerator.nextLong();
                 }
                 case "2" -> {
-                    var editedSettings = settingsMenu.edit(settings);
-
-                    if (editedSettings.isEmpty()) {
+                    var editedPreferences = settingsMenu.edit(preferences);
+                    if (editedPreferences.isEmpty()) {
                         printEndOfInput();
                         return;
                     }
-
-                    settings = editedSettings.orElseThrow();
+                    preferences = editedPreferences.orElseThrow();
                 }
                 case "3" -> statisticsPrinter.print(statistics.snapshot());
                 case "0" -> {
@@ -96,22 +92,26 @@ public final class ConsoleMenu {
         }
     }
 
-    private boolean playGame(GameSettings settings, long seed, PlayerStatistics statistics) throws IOException {
+    private boolean playGame(ConsolePreferences preferences, long seed, PlayerStatistics statistics)
+            throws IOException {
+        GameSettings settings = preferences.gameSettings();
         WordDictionary dictionary = catalog.select(settings);
         GameSession session = service.startGame(dictionary, maxAttempts, seed);
         statistics.startGame(session);
         try {
-            game.play(session, seed, settings);
+            new ConsoleGame(service, input, output, preferences.colorMode()).play(session, seed, settings);
         } finally {
             statistics.finishGame();
         }
         return session.status() != GameStatus.IN_PROGRESS;
     }
 
-    private void printMenu(GameSettings settings) {
+    private void printMenu(ConsolePreferences preferences) {
+        GameSettings settings = preferences.gameSettings();
         output.println("Главное меню");
         output.println("Сложность: " + settings.difficulty().title());
         output.println("Категория: " + settings.category().title());
+        output.println("Цвет: " + preferences.colorMode().title());
         output.println("1. Новая игра");
         output.println("2. Настройки");
         output.println("3. Статистика");
