@@ -106,7 +106,7 @@ class SettingsCliTest {
 
         assertThat(result.stdout()
                         .lines()
-                        .filter(line -> line.equals("Неизвестный пункт настроек. Введите число от 0 до 5."))
+                        .filter(line -> line.equals("Неизвестный пункт настроек. Введите число от 0 до 7."))
                         .count())
                 .isEqualTo(3L);
     }

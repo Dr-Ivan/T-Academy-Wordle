@@ -23,7 +23,7 @@ class CommandLineParserTest {
     void preservesDefaultSettings() {
         var result = parser.parse(new String[] {"--seed", "42"});
 
-        assertThat(result).isEqualTo(new LaunchOptions.Play(42L, GameSettings.DEFAULT));
+        assertThat(result).isEqualTo(new LaunchOptions.Play(42L, GameSettings.DEFAULT, ColorMode.NEVER));
     }
 
     @Test
@@ -32,7 +32,8 @@ class CommandLineParserTest {
         var result = parser.parse(new String[] {"--category", "NaTuRe", "--seed", "-42", "--difficulty", "EaSy"});
 
         assertThat(result)
-                .isEqualTo(new LaunchOptions.Play(-42L, new GameSettings(Difficulty.EASY, WordCategory.NATURE)));
+                .isEqualTo(new LaunchOptions.Play(
+                        -42L, new GameSettings(Difficulty.EASY, WordCategory.NATURE), ColorMode.NEVER));
     }
 
     @Test
@@ -42,7 +43,8 @@ class CommandLineParserTest {
                 parser.parse(new String[] {"menu", "--difficulty", "easy", "--seed", "42", "--category", "everyday"});
 
         assertThat(result)
-                .isEqualTo(new LaunchOptions.Menu(42L, new GameSettings(Difficulty.EASY, WordCategory.EVERYDAY)));
+                .isEqualTo(new LaunchOptions.Menu(
+                        42L, new GameSettings(Difficulty.EASY, WordCategory.EVERYDAY), ColorMode.NEVER));
     }
 
     @Test
@@ -79,6 +81,7 @@ class CommandLineParserTest {
                 .isEqualTo(new LaunchOptions.Replay(
                         42L,
                         new GameSettings(Difficulty.EASY, WordCategory.NATURE),
+                        ColorMode.NEVER,
                         List.of(":hint", " АрБуЗ ", "--seed", "-7")));
     }
 
@@ -87,7 +90,7 @@ class CommandLineParserTest {
     void acceptsEmptyReplay() {
         var result = parser.parse(new String[] {"replay", "--seed", "42", "--guesses"});
 
-        assertThat(result).isEqualTo(new LaunchOptions.Replay(42L, GameSettings.DEFAULT, List.of()));
+        assertThat(result).isEqualTo(new LaunchOptions.Replay(42L, GameSettings.DEFAULT, ColorMode.NEVER, List.of()));
     }
 
     @ParameterizedTest
@@ -95,6 +98,14 @@ class CommandLineParserTest {
     @DisplayName("Неполные, неизвестные и повторные параметры отклоняются")
     void rejectsInvalidArguments(List<String> arguments) {
         assertThatIllegalArgumentException().isThrownBy(() -> parser.parse(arguments.toArray(String[]::new)));
+    }
+
+    @Test
+    @DisplayName("Цветной режим разбирается независимо от игровых настроек")
+    void parsesColorMode() {
+        var result = parser.parse(new String[] {"--color", "AlWaYs", "--seed", "42"});
+
+        assertThat(result).isEqualTo(new LaunchOptions.Play(42L, GameSettings.DEFAULT, ColorMode.ALWAYS));
     }
 
     private static Stream<List<String>> invalidArguments() {
@@ -112,6 +123,9 @@ class CommandLineParserTest {
                 List.of("--seed", "42", "--guesses"),
                 List.of("replay", "--seed", "42"),
                 List.of("replay", "--guesses", "арбуз"),
-                List.of("menu", "--seed", "42", "extra"));
+                List.of("menu", "--seed", "42", "extra"),
+                List.of("--seed", "42", "--color"),
+                List.of("--seed", "42", "--color", "auto"),
+                List.of("--seed", "42", "--color", "always", "--color", "never"));
     }
 }
