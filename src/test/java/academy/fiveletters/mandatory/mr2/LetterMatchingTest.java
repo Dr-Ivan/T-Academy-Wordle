@@ -61,11 +61,11 @@ class LetterMatchingTest {
         var result = matcher.match("озеро", "банан");
 
         assertThat(result)
-            .containsExactly(
-                LetterStatus.ABSENT,
-                LetterStatus.ABSENT,
-                LetterStatus.ABSENT,
-                LetterStatus.ABSENT,
-                LetterStatus.ABSENT);
+                .containsExactly(
+                        LetterStatus.ABSENT,
+                        LetterStatus.ABSENT,
+                        LetterStatus.ABSENT,
+                        LetterStatus.ABSENT,
+                        LetterStatus.ABSENT);
     }
 }
