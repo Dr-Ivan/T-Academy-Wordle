@@ -58,6 +58,14 @@ class LetterMatchingTest {
     @Test
     @DisplayName("Ни одна буква не подошла: все позиции ❌")
     void noMatchingLetters() {
-        fail("Тест не реализован");
+        var result = matcher.match("озеро", "банан");
+
+        assertThat(result)
+            .containsExactly(
+                LetterStatus.ABSENT,
+                LetterStatus.ABSENT,
+                LetterStatus.ABSENT,
+                LetterStatus.ABSENT,
+                LetterStatus.ABSENT);
     }
 }
