@@ -1,9 +1,9 @@
 package academy.fiveletters.replay;
 
-import academy.fiveletters.game.GuessResult;
+import academy.fiveletters.game.GameActionResult;
 import java.util.Objects;
 
-public record ReplayStep(String input, GuessResult result) {
+public record ReplayStep(String input, GameActionResult result) {
 
     public ReplayStep {
         Objects.requireNonNull(input, "Ввод не должен быть null");
