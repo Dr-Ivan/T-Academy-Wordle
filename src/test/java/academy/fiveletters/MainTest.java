@@ -10,11 +10,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-@DisplayName("Командная строка и демонстрационный запуск MR1")
+@DisplayName("Командная строка и запуск игры")
 class MainTest {
 
     @Test
-    @DisplayName("Запуск с seed выводит параметры новой сессии и ожидаемый ответ")
+    @DisplayName("Запуск с seed скрывает ответ и корректно завершается при конце ввода")
     void startsSessionWithSpecifiedSeed() {
         var dictionary = new DictionaryLoader().loadResource("/dictionary.txt");
         var expectedSession = new GameService().startGame(dictionary, 6, 42L);
@@ -26,11 +26,10 @@ class MainTest {
         assertThat(result.stdout())
                 .contains(
                         "Seed: 42",
-                        "Слов в словаре: " + dictionary.size(),
-                        "Ответ (демонстрация MR1): " + expectedSession.answer(),
-                        "Лимит попыток: 6",
-                        "Использовано попыток: 0",
-                        "Статус: IN_PROGRESS");
+                        "Угадайте слово из пяти букв за 6 попыток.",
+                        "Введите слово:",
+                        "Ввод завершён. Партия прервана.")
+                .doesNotContain(expectedSession.answer(), "Победа!", "Неудача.", "демонстрация MR1");
     }
 
     @Test
@@ -45,11 +44,13 @@ class MainTest {
     }
 
     @Test
-    @DisplayName("Автоматически выбранный seed позволяет повторить вывод первоначального запуска")
+    @DisplayName("Автоматический seed партии из меню позволяет повторить её прямым запуском")
     void automaticallyChosenSeedCanBeReused() {
-        var first = CliRunner.run();
+        var first = CliRunner.runWithInput("1\n");
 
         assertThat(first.exitCode()).isZero();
+        assertThat(first.stderr()).isEmpty();
+        assertThat(first.stdout()).contains("Главное меню", "Партия прервана.");
 
         String seed = first.stdout()
                 .lines()
@@ -61,7 +62,10 @@ class MainTest {
         var repeated = CliRunner.run("--seed", seed);
 
         assertThat(repeated.exitCode()).isZero();
-        assertThat(repeated.stdout()).isEqualTo(first.stdout());
+        assertThat(repeated.stderr()).isEmpty();
+
+        String firstGameOutput = first.stdout().substring(first.stdout().indexOf("Игра 5 букв"));
+        assertThat(repeated.stdout()).isEqualTo(firstGameOutput);
     }
 
     @Test
@@ -71,7 +75,7 @@ class MainTest {
 
         assertThat(result.exitCode()).isZero();
         assertThat(result.stderr()).isEmpty();
-        assertThat(result.stdout()).contains("Использование:", "--seed").doesNotContain("Статус:");
+        assertThat(result.stdout()).contains("Использование:", "--seed").doesNotContain("Seed: ", "Введите слово:");
     }
 
     @ParameterizedTest
@@ -83,6 +87,12 @@ class MainTest {
         assertThat(result.exitCode()).isEqualTo(2);
         assertThat(result.stdout()).isEmpty();
         assertThat(result.stderr()).contains("Ошибка аргументов:", "Seed должен быть целым числом");
+
+        var menuResult = CliRunner.run("menu", "--seed", seed);
+
+        assertThat(menuResult.exitCode()).isEqualTo(2);
+        assertThat(menuResult.stdout()).isEmpty();
+        assertThat(menuResult.stderr()).contains("Ошибка аргументов:", "Seed должен быть целым числом");
     }
 
     @ParameterizedTest
@@ -115,5 +125,87 @@ class MainTest {
         assertThat(result.exitCode()).isZero();
         assertThat(result.stdout()).contains("Seed: " + seed);
         assertThat(result.stderr()).isEmpty();
+
+        var menuResult = CliRunner.runWithInput("1\n", "menu", "--seed", seed);
+
+        assertThat(menuResult.exitCode()).isZero();
+        assertThat(menuResult.stderr()).isEmpty();
+        assertThat(menuResult.stdout()).contains("Seed: " + seed, "Партия прервана.");
+    }
+
+    @Test
+    @DisplayName("Некорректный консольный ввод не расходует попытку перед победным ответом")
+    void invalidInputDoesNotConsumeAttemptBeforeWin() {
+        var dictionary = new DictionaryLoader().loadResource("/dictionary.txt");
+        var session = new GameService().startGame(dictionary, 6, 42L);
+        String input = "дом12\n" + session.answer() + "\n";
+
+        var result = CliRunner.runWithInput(input, "--seed", "42");
+
+        assertThat(result.exitCode()).isZero();
+        assertThat(result.stderr()).isEmpty();
+        assertThat(result.stdout())
+                .contains(
+                        "Допустимы только русские буквы без ё.",
+                        "✅✅✅✅✅ " + session.answer(),
+                        "Осталось попыток: 5",
+                        "Победа! Слово угадано за 1 попытку")
+                .doesNotContain("Неудача.", "Партия прервана.");
+    }
+
+    @Test
+    @DisplayName("После победы приложение завершает игру без обработки оставшегося ввода")
+    void doesNotProcessInputAfterWin() {
+        var dictionary = new DictionaryLoader().loadResource("/dictionary.txt");
+        var session = new GameService().startGame(dictionary, 6, 42L);
+        String input = session.answer() + "\nдом12\n";
+
+        var result = CliRunner.runWithInput(input, "--seed", "42");
+
+        assertThat(result.exitCode()).isZero();
+        assertThat(result.stderr()).isEmpty();
+        assertThat(result.stdout())
+                .contains("Победа!")
+                .doesNotContain("Допустимы только русские буквы без ё.", "Партия прервана.");
+    }
+
+    @Test
+    @DisplayName("Выход из меню завершает программу без запуска партии")
+    void exitsMenuWithoutStartingGame() {
+        var result = CliRunner.runWithInput(" 0 \n");
+
+        assertThat(result.exitCode()).isZero();
+        assertThat(result.stderr()).isEmpty();
+        assertThat(result.stdout()).contains("Главное меню", "До свидания!").doesNotContain("Seed: ", "Введите слово:");
+    }
+
+    @Test
+    @DisplayName("Конец ввода в меню корректно завершает программу")
+    void endOfInputClosesMenu() {
+        var result = CliRunner.run();
+
+        assertThat(result.exitCode()).isZero();
+        assertThat(result.stderr()).isEmpty();
+        assertThat(result.stdout())
+                .contains("Главное меню", "Ввод завершён. Программа закрыта.")
+                .doesNotContain("Seed: ", "Введите слово:");
+    }
+
+    @Test
+    @DisplayName("Конец ввода во время партии завершает приложение без повторного меню")
+    void endOfInputDuringGameClosesApplication() {
+        var result = CliRunner.runWithInput("1\n", "menu", "--seed", "42");
+
+        assertThat(result.exitCode()).isZero();
+        assertThat(result.stderr()).isEmpty();
+        assertThat(result.stdout())
+                .contains("Seed: 42", "Ввод завершён. Партия прервана.")
+                .doesNotContain("Победа!", "Неудача.", "До свидания!");
+
+        assertThat(result.stdout()
+                        .lines()
+                        .filter(line -> line.equals("Главное меню"))
+                        .count())
+                .isEqualTo(1L);
     }
 }

@@ -12,6 +12,7 @@ public final class GameSession {
     private final String answer;
     private final int maxAttempts;
     private final List<String> attemptsHistory = new ArrayList<>();
+    private boolean hintUsed;
 
     GameSession(WordDictionary dictionary, String answer, int maxAttempts) {
         this.dictionary = Objects.requireNonNull(dictionary, "Словарь не должен быть null");
@@ -73,5 +74,23 @@ public final class GameSession {
         }
 
         attemptsHistory.add(guess);
+    }
+
+    boolean containsWord(String word) {
+        return dictionary.contains(word);
+    }
+
+    public boolean hintUsed() {
+        return hintUsed;
+    }
+
+    void markHintUsed() {
+        if (status() != GameStatus.IN_PROGRESS) {
+            throw new IllegalStateException("Нельзя использовать подсказку в завершённой партии");
+        }
+        if (hintUsed) {
+            throw new IllegalStateException("Подсказка уже использована");
+        }
+        hintUsed = true;
     }
 }
